@@ -3,7 +3,7 @@ import 'package:hive/hive.dart';
 part 'expense.g.dart'; // This line tells Flutter to generate a file.
 
 @HiveType(typeId: 0)
-enum Category { food, travel, shopping, bills, others }
+enum Category { food, travel, shopping, bills, entertainment, others }
 
 class Expense {
   @HiveField(0)
