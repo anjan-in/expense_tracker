@@ -28,7 +28,7 @@ class _AddExpenseState extends State<AddExpense> {
         title: enteredTitle,
         amount: enteredAmount,
         date: selectedDate!,
-        category: 'others',
+        category: Category.others,
       ),
     );
 
