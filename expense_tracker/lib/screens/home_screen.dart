@@ -60,27 +60,72 @@ class _HomeScreenState extends State<HomeScreen> {
                   //   subtitle: Text('${exp.date.toLocal()}'.split(' ')[0]),
                   //   trailing: Text('₹${exp.amount.toStringAsFixed(2)}'),
                   // );
-                  return Card(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ListTile(
-                      leading: Icon(
-                        categoryIcons[exp.category],
-                        size: 30,
-                        color: Colors.deepPurple,
+                  return Dismissible(
+                    key: ValueKey(exp.title + exp.date.toIso8601String()),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
                       ),
-                      title: Text(
-                        exp.title,
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      alignment: Alignment.centerRight,
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      subtitle: Text('${exp.date.toLocal()}'.split(' ')[0]),
-                      trailing: Text('₹${exp.amount.toStringAsFixed(2)}'),
+                      child: const Icon(
+                        Icons.delete,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+                    ),
+                    onDismissed: (_) {
+                      final removedExpense = _expenses[index];
+                      final removedIndex = index;
+
+                      setState(() {
+                        _expenses.removeAt(index);
+                      });
+
+                      ScaffoldMessenger.of(context).clearSnackBars();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('Expense deleted'),
+                          duration: const Duration(seconds: 4),
+                          action: SnackBarAction(
+                            label: 'Undo',
+                            onPressed: () {
+                              setState(() {
+                                _expenses.insert(removedIndex, removedExpense);
+                              });
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                    child: Card(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ListTile(
+                        leading: Icon(
+                          categoryIcons[exp.category],
+                          size: 30,
+                          color: Colors.deepPurple,
+                        ),
+                        title: Text(
+                          exp.title,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text('${exp.date.toLocal()}'.split(' ')[0]),
+                        trailing: Text('₹${exp.amount.toStringAsFixed(2)}'),
+                      ),
                     ),
                   );
                 },
