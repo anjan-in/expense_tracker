@@ -6,6 +6,22 @@ class AddExpense extends StatefulWidget {
 
   const AddExpense({super.key, required this.onAdd});
 
+  String getCategoryIcon(Category category) {
+    switch (category) {
+      case Category.food:
+        return '🍔';
+      case Category.travel:
+        return '🚗';
+      case Category.entertainment:
+        return '🎬';
+      case Category.shopping:
+        return '🛍️';
+      case Category.others:
+      default:
+        return '💡';
+    }
+  }
+
   @override
   State<AddExpense> createState() => _AddExpenseState();
 }
