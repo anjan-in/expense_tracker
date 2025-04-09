@@ -16,7 +16,7 @@ class Expense {
   final DateTime date;
 
   @HiveField(3)
-  final String category;
+  final Category category;
 
   Expense({
     required this.title,
@@ -24,4 +24,31 @@ class Expense {
     required this.date,
     required this.category,
   });
+
+  @override
+  String toString() {
+    return 'Expense(title: $title, amount: $amount, date: $date, category: $category)';
+  }
 }
+
+// Sample mock list
+final List<Expense> dummyExpenses = [
+  Expense(
+    title: 'Dinner',
+    amount: 25.99,
+    date: DateTime.now().subtract(Duration(days: 1)),
+    category: Category.food,
+  ),
+  Expense(
+    title: 'Bus Ticket',
+    amount: 3.50,
+    date: DateTime.now().subtract(Duration(days: 2)),
+    category: Category.travel,
+  ),
+  Expense(
+    title: 'Netflix',
+    amount: 15.00,
+    date: DateTime.now().subtract(Duration(days: 4)),
+    category: Category.others,
+  ),
+];
