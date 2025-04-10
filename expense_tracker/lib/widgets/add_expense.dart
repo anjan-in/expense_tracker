@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import '../models/expense.dart';
 
 class AddExpense extends StatefulWidget {
+  final Expense? existingExpense;
   final Function(Expense) onAdd;
+  final Function(Expense)? onUpdate;
 
-  const AddExpense({super.key, required this.onAdd});
+  // const AddExpense({super.key, required this.onAdd});
+  AddExpense({this.existingExpense, required this.onAdd, this.onUpdate});
 
   String getCategoryIcon(Category category) {
     switch (category) {
@@ -31,24 +34,49 @@ class _AddExpenseState extends State<AddExpense> {
 
   final titleController = TextEditingController();
   final amountController = TextEditingController();
-  DateTime? selectedDate;
-  Category? selectedCategory;
+  late DateTime selectedDate;
+  late Category selectedCategory;
+
+  @override
+  void initState() {
+    super.initState();
+    titleController.text = widget.existingExpense?.title ?? '';
+    amountController.text = widget.existingExpense?.amount.toString() ?? '';
+    selectedDate = widget.existingExpense?.date ?? DateTime.now();
+    selectedCategory = widget.existingExpense?.category ?? Category.others;
+  }
 
   void _submitData() {
     final enteredTitle = titleController.text;
     final enteredAmount = double.tryParse(amountController.text);
 
-    if (enteredTitle.isEmpty || enteredAmount == null || selectedDate == null)
+    if (enteredTitle.isEmpty ||
+        enteredAmount == null ||
+        enteredAmount <= 0 ||
+        false) {
       return;
+    }
 
-    widget.onAdd(
-      Expense(
-        title: enteredTitle,
-        amount: enteredAmount,
-        date: selectedDate!,
-        category: Category.others,
-      ),
+    final newExpense = Expense(
+      title: enteredTitle,
+      amount: enteredAmount,
+      date: selectedDate,
+      category: selectedCategory,
     );
+
+    if (widget.existingExpense != null && widget.onUpdate != null) {
+      widget.onUpdate!(newExpense);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Expense updated successfully')),
+      );
+    } else {
+      widget.onAdd(newExpense);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Expense added successfully')),
+      );
+    }
+
+    // widget.onAdd(newExpense);
 
     Navigator.of(context).pop(); // close the modal
   }
@@ -73,7 +101,12 @@ class _AddExpenseState extends State<AddExpense> {
       key: _formKey, // 🔐 Attach the key
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(
+            widget.existingExpense != null ? 'Edit Expense' : 'Add New Expense',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
           TextFormField(
             controller: titleController,
             decoration: const InputDecoration(labelText: 'Title'),
@@ -101,11 +134,7 @@ class _AddExpenseState extends State<AddExpense> {
           ),
           Row(
             children: [
-              Text(
-                selectedDate == null
-                    ? 'No date chosen!'
-                    : 'Picked: ${selectedDate!.toLocal()}'.split(' ')[0],
-              ),
+              Text('Picked: ${selectedDate.toLocal()}'.split(' ')[0]),
               TextButton(
                 onPressed: _presentDatePicker,
                 child: const Text('Choose Date'),
@@ -137,15 +166,13 @@ class _AddExpenseState extends State<AddExpense> {
           const SizedBox(height: 10),
           ElevatedButton(
             onPressed: () {
-              if (_formKey.currentState!.validate() && selectedDate != null) {
+              if (_formKey.currentState!.validate()) {
                 _submitData(); // ✅ submit only if valid
-              } else if (selectedDate == null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Please choose a date!')),
-                );
               }
             },
-            child: const Text('Add Expense'),
+            child: Text(
+              widget.existingExpense != null ? 'Update Expense' : 'Add Expense',
+            ),
           ),
         ],
       ),

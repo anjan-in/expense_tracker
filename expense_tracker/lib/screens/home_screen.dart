@@ -36,6 +36,35 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _openEditExpenseModal(Expense oldExpense, int index) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) {
+        return Padding(
+          padding: EdgeInsets.only(
+            top: 20,
+            left: 20,
+            right: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
+          child: AddExpense(
+            existingExpense: oldExpense,
+            onAdd: _addNewExpense,
+            onUpdate: (updatedExpense) {
+              setState(() {
+                _expenses[index] = updatedExpense;
+              });
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('Expense updated')));
+            },
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -125,6 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         subtitle: Text('${exp.date.toLocal()}'.split(' ')[0]),
                         trailing: Text('₹${exp.amount.toStringAsFixed(2)}'),
+                        onLongPress: () => _openEditExpenseModal(exp, index),
                       ),
                     ),
                   );
