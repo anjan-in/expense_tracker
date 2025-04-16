@@ -13,7 +13,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Expense Tracker',
-      theme: ThemeData(primarySwatch: Colors.teal, useMaterial3: true),
+      theme: ThemeData(
+        // primarySwatch: Colors.teal,
+        useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFFF7F8FA),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+      ),
       home: HomeScreen(),
       debugShowCheckedModeBanner: false,
     );
