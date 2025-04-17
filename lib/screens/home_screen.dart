@@ -3,6 +3,8 @@ import '../models/expense.dart';
 import '../widgets/add_expense.dart';
 import '../widgets/expense_card.dart';
 
+enum FilterOption { today, thisWeek, thisMonth }
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -12,22 +14,50 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final List<Expense> _expenses = [];
+  FilterOption selectedFilter = FilterOption.thisMonth;
+
+  List<Expense> get filteredExpenses {
+    final now = DateTime.now();
+    return _expenses.where((expense) {
+      if (selectedFilter == FilterOption.today) {
+        return expense.date.day == now.day &&
+            expense.date.month == now.month &&
+            expense.date.year == now.year;
+      } else if (selectedFilter == FilterOption.thisWeek) {
+        final weekAgo = now.subtract(const Duration(days: 7));
+        return expense.date.isAfter(weekAgo);
+      } else {
+        return expense.date.month == now.month && expense.date.year == now.year;
+      }
+    }).toList();
+  }
+
+  double get total {
+    return filteredExpenses.fold(0.0, (sum, expense) => sum + expense.amount);
+  }
 
   void _openAddExpenseModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) {
-        return Padding(
-          padding: EdgeInsets.only(
-            top: 20,
-            left: 20,
-            right: 20,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder:
+          (ctx) => AnimatedPadding(
+            duration: const Duration(milliseconds: 300),
+            padding: MediaQuery.of(ctx).viewInsets,
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: AddExpense(
+                onAdd: (expense) {
+                  setState(() {
+                    _expenses.add(expense);
+                  });
+                },
+              ),
+            ),
           ),
-          child: AddExpense(onAdd: _addNewExpense),
-        );
-      },
     );
   }
 
@@ -41,32 +71,221 @@ class _HomeScreenState extends State<HomeScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) {
-        return Padding(
-          padding: EdgeInsets.only(
-            top: 20,
-            left: 20,
-            right: 20,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      builder:
+          (ctx) => AnimatedPadding(
+            duration: const Duration(milliseconds: 300),
+            padding: MediaQuery.of(ctx).viewInsets,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: AddExpense(
+                existingExpense: oldExpense,
+                onAdd: _addNewExpense,
+                onUpdate: (updatedExpense) {
+                  setState(() {
+                    _expenses[index] = updatedExpense;
+                  });
+                },
+              ),
+            ),
           ),
-          child: AddExpense(
-            existingExpense: oldExpense,
-            onAdd: _addNewExpense,
-            onUpdate: (updatedExpense) {
-              setState(() {
-                _expenses[index] = updatedExpense;
-              });
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('Expense updated')));
-            },
-          ),
-        );
+    );
+  }
+
+  // void _openEditExpenseModal(Expense oldExpense, int index) {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     isScrollControlled: true,
+  //     builder: (_) {
+  //       return Padding(
+  //         padding: EdgeInsets.only(
+  //           top: 20,
+  //           left: 20,
+  //           right: 20,
+  //           bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+  //         ),
+  //         child: AddExpense(
+  //           existingExpense: oldExpense,
+  //           onAdd: _addNewExpense,
+  //           onUpdate: (updatedExpense) {
+  //             setState(() {
+  //               _expenses[index] = updatedExpense;
+  //             });
+  //             ScaffoldMessenger.of(
+  //               context,
+  //             ).showSnackBar(const SnackBar(content: Text('Expense updated')));
+  //           },
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
+
+  void removeExpense(int index) {
+    setState(() {
+      _expenses.removeAt(index);
+    });
+  }
+
+  Widget _buildFilterButton(FilterOption filter, String label) {
+    final isSelected = selectedFilter == filter;
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (_) {
+        setState(() {
+          selectedFilter = filter;
+        });
       },
+      selectedColor: Colors.deepPurple,
+      labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black),
     );
   }
 
   @override
+  // Widget build(BuildContext context) {
+  //   return Scaffold(
+  //     appBar: AppBar(
+  //       title: const Text(
+  //         'Expense Tracker',
+  //         style: TextStyle(fontWeight: FontWeight.bold),
+  //       ),
+  //       backgroundColor: Colors.white,
+  //       elevation: 1,
+  //       foregroundColor: Colors.black,
+  //     ),
+  //     body:
+  //         _expenses.isEmpty
+  //             ? Center(
+  //               child: Column(
+  //                 mainAxisAlignment: MainAxisAlignment.center,
+  //                 children: const [
+  //                   Icon(Icons.inbox, size: 80, color: Colors.grey),
+  //                   SizedBox(height: 16),
+  //                   Text(
+  //                     'No expenses yet!',
+  //                     style: TextStyle(fontSize: 18, color: Colors.grey),
+  //                   ),
+  //                 ],
+  //               ),
+  //             )
+  //             : ListView.builder(
+  //               itemCount: filteredExpenses.length,
+  //               // itemCount: _expenses.length,
+  //               itemBuilder: (ctx, index) {
+  //                 final exp = filteredExpenses[index];
+  //                 Card(
+  //                   margin: const EdgeInsets.all(12),
+  //                   shape: RoundedRectangleBorder(
+  //                     borderRadius: BorderRadius.circular(12),
+  //                   ),
+  //                   color: Colors.teal.shade50,
+  //                   child: Padding(
+  //                     padding: const EdgeInsets.all(16.0),
+  //                     child: Column(
+  //                       crossAxisAlignment: CrossAxisAlignment.start,
+  //                       children: [
+  //                         const Text(
+  //                           'Total Spent',
+  //                           style: TextStyle(fontSize: 14, color: Colors.teal),
+  //                         ),
+  //                         const SizedBox(height: 4),
+  //                         Text(
+  //                           '₹${total.toStringAsFixed(2)}',
+  //                           style: const TextStyle(
+  //                             fontSize: 22,
+  //                             fontWeight: FontWeight.bold,
+  //                           ),
+  //                         ),
+  //                       ],
+  //                     ),
+  //                   ),
+  //                 );
+  //                 Padding(
+  //                   padding: const EdgeInsets.symmetric(horizontal: 12.0),
+  //                   child: Row(
+  //                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                     children:
+  //                         FilterOption.values.map((filter) {
+  //                           final isSelected = selectedFilter == filter;
+  //                           return ChoiceChip(
+  //                             label: Text(
+  //                               filter.name.toUpperCase(),
+  //                               style: TextStyle(
+  //                                 fontWeight: FontWeight.bold,
+  //                                 color:
+  //                                     isSelected ? Colors.white : Colors.teal,
+  //                               ),
+  //                             ),
+  //                             selectedColor: Colors.teal,
+  //                             backgroundColor: Colors.teal.shade50,
+  //                             selected: isSelected,
+  //                             onSelected: (_) {
+  //                               setState(() {
+  //                                 selectedFilter = filter;
+  //                               });
+  //                             },
+  //                           );
+  //                         }).toList(),
+  //                   ),
+  //                 );
+  //                 // final exp = _expenses[index];
+  //                 return Dismissible(
+  //                   key: ValueKey(exp.title + exp.date.toIso8601String()),
+  //                   direction: DismissDirection.endToStart,
+  //                   background: Container(
+  //                     margin: const EdgeInsets.symmetric(
+  //                       horizontal: 16,
+  //                       vertical: 8,
+  //                     ),
+  //                     padding: const EdgeInsets.symmetric(horizontal: 20),
+  //                     alignment: Alignment.centerRight,
+  //                     decoration: BoxDecoration(
+  //                       color: Colors.red,
+  //                       borderRadius: BorderRadius.circular(12),
+  //                     ),
+  //                     child: const Icon(
+  //                       Icons.delete,
+  //                       color: Colors.white,
+  //                       size: 28,
+  //                     ),
+  //                   ),
+  //                   onDismissed: (_) {
+  //                     final removedExpense = _expenses[index];
+  //                     final removedIndex = index;
+  //                     setState(() {
+  //                       _expenses.removeAt(index);
+  //                     });
+  //                     ScaffoldMessenger.of(context).clearSnackBars();
+  //                     ScaffoldMessenger.of(context).showSnackBar(
+  //                       SnackBar(
+  //                         content: const Text('Expense deleted'),
+  //                         duration: const Duration(seconds: 4),
+  //                         action: SnackBarAction(
+  //                           label: 'Undo',
+  //                           onPressed: () {
+  //                             setState(() {
+  //                               _expenses.insert(removedIndex, removedExpense);
+  //                             });
+  //                           },
+  //                         ),
+  //                       ),
+  //                     );
+  //                   },
+  //                   child: ExpenseCard(
+  //                     expense: exp,
+  //                     onLongPress: () => _openEditExpenseModal(exp, index),
+  //                   ),
+  //                 );
+  //               },
+  //             ),
+  //     floatingActionButton: FloatingActionButton(
+  //       backgroundColor: Colors.deepPurple,
+  //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+  //       onPressed: () => _openAddExpenseModal(context),
+  //       child: const Icon(Icons.add, color: Colors.white),
+  //     ),
+  //   );
+  // }
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -79,173 +298,142 @@ class _HomeScreenState extends State<HomeScreen> {
         foregroundColor: Colors.black,
         // actions: [
         //   IconButton(
-        //     icon: const Icon(Icons.add),
         //     onPressed: () => _openAddExpenseModal(context),
+        //     icon: const Icon(Icons.add),
         //   ),
         // ],
       ),
-      body:
-          _expenses.isEmpty
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(Icons.inbox, size: 80, color: Colors.grey),
-                    SizedBox(height: 16),
-                    Text(
-                      'No expenses yet!',
-                      style: TextStyle(fontSize: 18, color: Colors.grey),
-                    ),
-                  ],
-                ),
-              )
-              : ListView.builder(
-                itemCount: _expenses.length,
-                itemBuilder: (ctx, index) {
-                  final exp = _expenses[index];
-                  return Dismissible(
-                    key: ValueKey(exp.title + exp.date.toIso8601String()),
-                    direction: DismissDirection.endToStart,
-                    background: Container(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      alignment: Alignment.centerRight,
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.delete,
-                        color: Colors.white,
-                        size: 28,
-                      ),
-                    ),
-                    onDismissed: (_) {
-                      final removedExpense = _expenses[index];
-                      final removedIndex = index;
-
-                      setState(() {
-                        _expenses.removeAt(index);
-                      });
-
-                      ScaffoldMessenger.of(context).clearSnackBars();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('Expense deleted'),
-                          duration: const Duration(seconds: 4),
-                          action: SnackBarAction(
-                            label: 'Undo',
-                            onPressed: () {
-                              setState(() {
-                                _expenses.insert(removedIndex, removedExpense);
-                              });
-                            },
-                          ),
-                        ),
-                      );
-                    },
-                    child: ExpenseCard(
-                      expense: exp,
-                      onLongPress: () => _openEditExpenseModal(exp, index),
-                    ),
-                    // child: Card(
-                    //   margin: const EdgeInsets.symmetric(
-                    //     horizontal: 16,
-                    //     vertical: 8,
-                    //   ),
-                    //   elevation: 4,
-                    //   shape: RoundedRectangleBorder(
-                    //     borderRadius: BorderRadius.circular(12),
-                    //   ),
-                    //   child: InkWell(
-                    //     onLongPress: () => _openEditExpenseModal(exp, index),
-                    //     borderRadius: BorderRadius.circular(12),
-                    //     child: Container(
-                    //       padding: const EdgeInsets.all(16),
-                    //       decoration: BoxDecoration(
-                    //         color: Colors.white,
-                    //         borderRadius: BorderRadius.circular(12),
-                    //         boxShadow: [
-                    //           BoxShadow(
-                    //             color: Colors.grey.withOpacity(0.1),
-                    //             blurRadius: 6,
-                    //             offset: const Offset(0, 2),
-                    //           ),
-                    //         ],
-                    //       ),
-                    //       child: Row(
-                    //         children: [
-                    //           CircleAvatar(
-                    //             radius: 26,
-                    //             backgroundColor: Colors.deepPurple.shade50,
-                    //             child: Icon(
-                    //               categoryIcons[exp.category],
-                    //               color: Colors.deepPurple,
-                    //               size: 28,
-                    //             ),
-                    //           ),
-                    //           const SizedBox(width: 16),
-                    //           Expanded(
-                    //             child: Column(
-                    //               crossAxisAlignment: CrossAxisAlignment.start,
-                    //               children: [
-                    //                 Text(
-                    //                   exp.title,
-                    //                   style: const TextStyle(
-                    //                     fontWeight: FontWeight.w600,
-                    //                     fontSize: 16,
-                    //                   ),
-                    //                 ),
-                    //                 const SizedBox(height: 4),
-                    //                 Text(
-                    //                   '${exp.date.toLocal()}'.split(' ')[0],
-                    //                   style: const TextStyle(
-                    //                     color: Colors.grey,
-                    //                     fontSize: 13,
-                    //                   ),
-                    //                 ),
-                    //               ],
-                    //             ),
-                    //           ),
-                    //           Text(
-                    //             '₹${exp.amount.toStringAsFixed(2)}',
-                    //             style: const TextStyle(
-                    //               fontWeight: FontWeight.bold,
-                    //               fontSize: 16,
-                    //               color: Colors.deepPurple,
-                    //             ),
-                    //           ),
-                    //         ],
-                    //       ),
-                    //     ),
-                    //   ),
-                    //   child: ListTile(
-                    //     leading: Icon(
-                    //       categoryIcons[exp.category],
-                    //       size: 30,
-                    //       color: Colors.deepPurple,
-                    //     ),
-                    //     title: Text(
-                    //       exp.title,
-                    //       style: TextStyle(fontWeight: FontWeight.bold),
-                    //     ),
-                    //     subtitle: Text('${exp.date.toLocal()}'.split(' ')[0]),
-                    //     trailing: Text('₹${exp.amount.toStringAsFixed(2)}'),
-                    //     onLongPress: () => _openEditExpenseModal(exp, index),
-                    //   ),
-                    // ),
-                  );
-                },
-              ),
-
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.deepPurple,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         onPressed: () => _openAddExpenseModal(context),
         child: const Icon(Icons.add, color: Colors.white),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Total Expense Summary Card
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              color: Colors.deepPurple.shade100,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Total Spent', style: TextStyle(fontSize: 16)),
+                    Text(
+                      '₹${total.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Colors.deepPurple,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // Filter Tabs
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildFilterButton(FilterOption.today, 'Today'),
+                  const SizedBox(width: 8),
+                  _buildFilterButton(FilterOption.thisWeek, 'This Week'),
+                  const SizedBox(width: 8),
+                  _buildFilterButton(FilterOption.thisMonth, 'This Month'),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Expenses List
+            Expanded(
+              child:
+                  filteredExpenses.isEmpty
+                      ? const Center(
+                        child: Text(
+                          'No expenses to show.',
+                          style: TextStyle(fontSize: 18, color: Colors.grey),
+                        ),
+                      )
+                      : ListView.builder(
+                        itemCount: filteredExpenses.length,
+                        itemBuilder: (ctx, index) {
+                          final expense = filteredExpenses[index];
+                          return Dismissible(
+                            key: ValueKey(
+                              expense.title + expense.date.toIso8601String(),
+                            ),
+                            direction: DismissDirection.endToStart,
+                            background: Container(
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
+                              alignment: Alignment.centerRight,
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.delete,
+                                color: Colors.white,
+                                size: 28,
+                              ),
+                            ),
+                            onDismissed: (_) {
+                              final removedExpense = _expenses[index];
+                              final removedIndex = index;
+                              setState(() {
+                                _expenses.removeAt(index);
+                              });
+                              ScaffoldMessenger.of(context).clearSnackBars();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text('Expense deleted'),
+                                  duration: const Duration(seconds: 4),
+                                  action: SnackBarAction(
+                                    label: 'Undo',
+                                    onPressed: () {
+                                      setState(() {
+                                        _expenses.insert(
+                                          removedIndex,
+                                          removedExpense,
+                                        );
+                                      });
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
+                            child: ExpenseCard(
+                              expense: expense,
+                              onLongPress:
+                                  () => _openEditExpenseModal(
+                                    expense,
+                                    _expenses.indexOf(expense),
+                                  ),
+                            ),
+                          );
+                        },
+                      ),
+            ),
+          ],
+        ),
       ),
     );
   }
