@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import '../models/expense.dart';
 import '../widgets/add_expense.dart';
 import '../widgets/expense_card.dart';
+import '../widgets/expense_pie_chart.dart';
+import '../widgets/expense_bar_chart.dart';
 
-enum FilterOption { today, thisWeek, thisMonth }
+enum FilterOption { all, today, thisWeek, thisMonth }
+
+bool showBarChart = true;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,8 +30,10 @@ class _HomeScreenState extends State<HomeScreen> {
       } else if (selectedFilter == FilterOption.thisWeek) {
         final weekAgo = now.subtract(const Duration(days: 7));
         return expense.date.isAfter(weekAgo);
-      } else {
+      } else if (selectedFilter == FilterOption.thisMonth) {
         return expense.date.month == now.month && expense.date.year == now.year;
+      } else {
+        return true;
       }
     }).toList();
   }
@@ -166,13 +172,15 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
 
             // Filter Tabs
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
+                  _buildFilterButton(FilterOption.all, 'All'),
+                  const SizedBox(width: 8),
                   _buildFilterButton(FilterOption.today, 'Today'),
                   const SizedBox(width: 8),
                   _buildFilterButton(FilterOption.thisWeek, 'This Week'),
@@ -182,7 +190,33 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
+
+            // ExpensePieChart(expenses: filteredExpenses),
+            // const SizedBox(height: 16),
+            // ExpenseBarChart(expenses: filteredExpenses),
+            Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Bar'),
+                    Switch(
+                      value: showBarChart,
+                      onChanged: (value) {
+                        setState(() {
+                          showBarChart = value;
+                        });
+                      },
+                    ),
+                    Text('Pie'),
+                  ],
+                ),
+                showBarChart
+                    ? ExpenseBarChart(expenses: filteredExpenses)
+                    : ExpensePieChart(expenses: filteredExpenses),
+              ],
+            ),
 
             // Expenses List
             Expanded(
