@@ -1,10 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/currency_helper.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  String selectedCurrency = 'USD';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrencyPreference();
+  }
+
+  Future<void> _loadCurrencyPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      selectedCurrency = prefs.getString('selectedCurrency') ?? 'USD';
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final symbol = getCurrencySymbol(selectedCurrency);
+
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -38,7 +62,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '₹24,500',
+                      '$symbol 24,500',
                       style: Theme.of(context).textTheme.displaySmall?.copyWith(
                         color: Colors.deepPurple,
                         fontWeight: FontWeight.bold,
@@ -47,15 +71,15 @@ class HomeScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: const [
+                      children: [
                         _StatItem(
                           label: 'Income',
-                          value: '₹32,000',
+                          value: '$symbol 32,000',
                           color: Colors.green,
                         ),
                         _StatItem(
                           label: 'Expense',
-                          value: '₹7,500',
+                          value: '$symbol 7,500',
                           color: Colors.red,
                         ),
                       ],
