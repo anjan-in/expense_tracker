@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'screens/home_screen.dart';
+// import 'screens/home_screen.dart';
+import 'screens/main_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,7 +20,8 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFFF7F8FA),
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: HomeScreen(),
+      home: const MainScreen(), // 👈 This is where the redirection happens
+      // home: HomeScreen(),
       debugShowCheckedModeBanner: false,
     );
   }
