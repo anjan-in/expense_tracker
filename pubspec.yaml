@@ -40,6 +40,7 @@ dependencies:
   fl_chart: ^0.66.0
   provider: ^6.1.1
   shared_preferences: ^2.2.2
+  sqflite: ^2.3.2
 
 dev_dependencies:
   flutter_test:
