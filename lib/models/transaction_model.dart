@@ -3,27 +3,6 @@ import 'package:hive/hive.dart';
 part 'transaction_model.g.dart';
 
 @HiveType(typeId: 0)
-enum ExpenseCategory {
-  @HiveField(0)
-  food,
-
-  @HiveField(1)
-  travel,
-
-  @HiveField(2)
-  shopping,
-
-  @HiveField(3)
-  entertainment,
-
-  @HiveField(4)
-  bills,
-
-  @HiveField(5)
-  other,
-}
-
-@HiveType(typeId: 1)
 class TransactionModel extends HiveObject {
   @HiveField(0)
   final String id;
@@ -47,4 +26,25 @@ class TransactionModel extends HiveObject {
     required this.date,
     required this.category,
   });
+}
+
+@HiveType(typeId: 1)
+enum ExpenseCategory {
+  @HiveField(0)
+  food,
+
+  @HiveField(1)
+  travel,
+
+  @HiveField(2)
+  shopping,
+
+  @HiveField(3)
+  entertainment,
+
+  @HiveField(4)
+  bills,
+
+  @HiveField(5)
+  other,
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/currency_helper.dart';
+import '../providers/transaction_provider.dart';
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,6 +18,13 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadCurrencyPreference();
+    Future.microtask(
+      () =>
+          Provider.of<TransactionProvider>(
+            context,
+            listen: false,
+          ).loadTransactions(),
+    );
   }
 
   Future<void> _loadCurrencyPreference() async {
@@ -109,7 +118,49 @@ class _HomeScreenState extends State<HomeScreen> {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 12),
-            ...List.generate(3, (index) => const _TransactionTile()),
+            // ...List.generate(3, (index) => const _TransactionTile()),
+
+            // 🛠️ Dynamic transaction list
+            Consumer<TransactionProvider>(
+              builder: (context, txnProvider, child) {
+                final txns = txnProvider.transactions;
+                if (txns.isEmpty) {
+                  return const Center(child: Text("No transactions yet."));
+                }
+                return ListView.builder(
+                  itemCount: txns.length,
+                  shrinkWrap:
+                      true, // important for embedding inside SingleChildScrollView
+                  physics:
+                      const NeverScrollableScrollPhysics(), // disable inner scrolling
+                  itemBuilder: (context, index) {
+                    final txn = txns[index];
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: Colors.deepPurple.shade100,
+                        child: Icon(
+                          txn.amount >= 0
+                              ? Icons.arrow_downward
+                              : Icons.arrow_upward,
+                          color: txn.amount >= 0 ? Colors.green : Colors.red,
+                        ),
+                      ),
+                      title: Text(txn.title),
+                      subtitle: Text(
+                        '${txn.category.name} • ${txn.date.toLocal()}',
+                      ),
+                      trailing: Text(
+                        '${txn.amount >= 0 ? '+' : '-'} ₹${txn.amount.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          color: txn.amount >= 0 ? Colors.green : Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
 
             const SizedBox(height: 16),
 
