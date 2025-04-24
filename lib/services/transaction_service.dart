@@ -24,18 +24,21 @@ class TransactionService {
   }
 
   /// Delete transaction by key
-  static Future<void> deleteTransaction(int key) async {
-    final box = await _openBox();
-    await box.delete(key);
+  static Future<void> deleteTransaction(String id) async {
+    // final box = await _openBox();
+    final box = Hive.box<TransactionModel>('transactions');
+    await box.delete(id);
   }
 
   /// Update transaction by key
   static Future<void> updateTransaction(
-    int key,
-    TransactionModel updated,
+    // int key,
+    TransactionModel updatedTxn,
   ) async {
-    final box = await _openBox();
-    await box.put(key, updated);
+    // final box = await _openBox();
+    // await box.put(key, updated);
+    final box = Hive.box<TransactionModel>('transactions');
+    await box.put(updatedTxn.id, updatedTxn);
   }
 
   /// Optional: Clear all (for reset/debug)
