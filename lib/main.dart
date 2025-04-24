@@ -2,8 +2,18 @@ import 'package:flutter/material.dart';
 import 'screens/main_screen.dart';
 import 'package:provider/provider.dart';
 import 'providers/theme_provider.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'models/transaction_model.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+
+  Hive.registerAdapter(TransactionModelAdapter());
+  Hive.registerAdapter(ExpenseCategoryAdapter());
+
+  await Hive.openBox<TransactionModel>('transactions');
+
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeProvider(),
