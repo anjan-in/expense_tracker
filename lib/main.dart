@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'providers/theme_provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'models/transaction_model.dart';
+import 'services/transaction_service.dart';
+import 'providers/transaction_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,9 +16,28 @@ void main() async {
 
   await Hive.openBox<TransactionModel>('transactions');
 
+  // Adding a sample transaction
+  await TransactionService.addTransaction(
+    TransactionModel(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      title: 'Lunch at cafe',
+      amount: 200,
+      category: ExpenseCategory.food,
+      date: DateTime.now(),
+    ),
+  );
+
+  // Getting all transactions
+  final allTransactions = await TransactionService.getAllTransactions();
+  // print(allTransactions.length);
+  debugPrint('Total transactions: ${allTransactions.length}');
+
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => TransactionProvider()),
+      ],
       child: const MyApp(),
     ),
   );
@@ -43,18 +64,5 @@ class MyApp extends StatelessWidget {
       ),
       home: const MainScreen(),
     );
-
-    // return MaterialApp(
-    //   title: 'Expense Tracker',
-    //   theme: ThemeData(
-    //     // primarySwatch: Colors.teal,
-    //     useMaterial3: true,
-    //     scaffoldBackgroundColor: const Color(0xFFF7F8FA),
-    //     colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-    //   ),
-    //   home: const MainScreen(), // 👈 This is where the redirection happens
-    //   // home: HomeScreen(),
-    //   debugShowCheckedModeBanner: false,
-    // );
   }
 }
