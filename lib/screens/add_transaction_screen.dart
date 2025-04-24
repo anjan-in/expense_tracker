@@ -30,7 +30,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         amount: double.parse(_amountController.text),
         category: _selectedCategory!,
         date: _selectedDate,
-        // note: _noteController.text.trim(),
+        note: _noteController.text.trim(),
       );
 
       await TransactionService.addTransaction(txn);

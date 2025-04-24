@@ -4,6 +4,7 @@ import '../utils/currency_helper.dart';
 import '../providers/transaction_provider.dart';
 import 'package:provider/provider.dart';
 import 'add_transaction_screen.dart';
+import '../screens/transaction_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -168,6 +169,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (_) =>
+                                    TransactionDetailScreen(transaction: txn),
+                          ),
+                        );
+                      },
                     );
                   },
                 );

@@ -19,12 +19,16 @@ class TransactionModel extends HiveObject {
   @HiveField(4)
   final ExpenseCategory category;
 
+  @HiveField(5)
+  final String? note;
+
   TransactionModel({
     required this.id,
     required this.title,
     required this.amount,
     required this.date,
     required this.category,
+    this.note,
   });
 }
 
