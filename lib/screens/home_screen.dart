@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/currency_helper.dart';
 import '../providers/transaction_provider.dart';
 import 'package:provider/provider.dart';
+import 'add_transaction_screen.dart';
+import '../screens/transaction_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -104,7 +106,18 @@ class _HomeScreenState extends State<HomeScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _QuickAction(icon: Icons.add, label: 'Add Expense'),
+                _QuickAction(
+                  icon: Icons.add,
+                  label: 'Add Expense',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const AddTransactionScreen(),
+                      ),
+                    );
+                  },
+                ),
                 _QuickAction(icon: Icons.attach_money, label: 'Add Income'),
                 _QuickAction(icon: Icons.camera_alt, label: 'Scan Receipt'),
               ],
@@ -156,6 +169,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (_) =>
+                                    TransactionDetailScreen(transaction: txn),
+                          ),
+                        );
+                      },
                     );
                   },
                 );
@@ -183,23 +206,41 @@ class _HomeScreenState extends State<HomeScreen> {
 class _QuickAction extends StatelessWidget {
   final IconData icon;
   final String label;
+  final VoidCallback? onTap;
 
-  const _QuickAction({required this.icon, required this.label});
+  const _QuickAction({required this.icon, required this.label, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        CircleAvatar(
-          radius: 24,
-          backgroundColor: Colors.deepPurple.shade100,
-          child: Icon(icon, color: Colors.deepPurple),
-        ),
-        const SizedBox(height: 8),
-        Text(label, style: Theme.of(context).textTheme.bodySmall),
-      ],
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          CircleAvatar(
+            radius: 24,
+            backgroundColor: Colors.deepPurple.shade100,
+            child: Icon(icon, color: Colors.deepPurple),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
     );
   }
+
+  // Widget build(BuildContext context) {
+  //   return Column(
+  //     children: [
+  //       CircleAvatar(
+  //         radius: 24,
+  //         backgroundColor: Colors.deepPurple.shade100,
+  //         child: Icon(icon, color: Colors.deepPurple),
+  //       ),
+  //       const SizedBox(height: 8),
+  //       Text(label, style: Theme.of(context).textTheme.bodySmall),
+  //     ],
+  //   );
+  // }
 }
 
 // Widget for income/expense stat
