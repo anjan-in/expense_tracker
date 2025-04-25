@@ -271,23 +271,23 @@ class _StatItem extends StatelessWidget {
 }
 
 // Dummy transaction tile
-class _TransactionTile extends StatelessWidget {
-  const _TransactionTile();
+// class _TransactionTile extends StatelessWidget {
+//   const _TransactionTile();
 
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: CircleAvatar(
-        backgroundColor: Colors.deepPurple.shade100,
-        child: const Icon(Icons.fastfood, color: Colors.deepPurple),
-      ),
-      title: const Text('Food & Drinks'),
-      subtitle: const Text('Today, 12:30 PM'),
-      trailing: const Text('- ₹150', style: TextStyle(color: Colors.red)),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return ListTile(
+//       contentPadding: EdgeInsets.zero,
+//       leading: CircleAvatar(
+//         backgroundColor: Colors.deepPurple.shade100,
+//         child: const Icon(Icons.fastfood, color: Colors.deepPurple),
+//       ),
+//       title: const Text('Food & Drinks'),
+//       subtitle: const Text('Today, 12:30 PM'),
+//       trailing: const Text('- ₹150', style: TextStyle(color: Colors.red)),
+//     );
+//   }
+// }
 
 // import 'package:flutter/material.dart';
 // import '../models/expense.dart';

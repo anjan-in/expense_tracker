@@ -50,5 +50,11 @@ enum ExpenseCategory {
   bills,
 
   @HiveField(5)
+  health,
+
+  @HiveField(6)
+  education,
+
+  @HiveField(7)
   other,
 }
