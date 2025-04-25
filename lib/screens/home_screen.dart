@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/currency_helper.dart';
 import '../providers/transaction_provider.dart';
 import 'package:provider/provider.dart';
 import 'add_transaction_screen.dart';
 import '../screens/transaction_detail_screen.dart';
+import '../models/monthly_income_model.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -39,6 +42,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final symbol = getCurrencySymbol(selectedCurrency);
+    final String currentMonthKey = DateFormat('yyyy-MM').format(DateTime.now());
+    final incomeBox = Hive.box<MonthlyIncome>('monthlyIncomeBox');
+    final monthlyIncome = incomeBox.get(currentMonthKey)?.income ?? 0.0;
 
     return SafeArea(
       child: SingleChildScrollView(

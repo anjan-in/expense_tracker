@@ -37,11 +37,11 @@ dependencies:
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   path_provider: ^2.1.5
-  fl_chart: ^0.66.0
+  fl_chart: ^0.71.0
   provider: ^6.1.1
   shared_preferences: ^2.2.2
   sqflite: ^2.3.2
-  intl: ^0.18.1
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
@@ -97,3 +97,9 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+dependency_overrides:
+  path_provider_android: ^2.2.17
+  shared_preferences_android: ^2.4.10
+  vector_math: ^2.1.5
+  material_color_utilities: ^0.12.0

@@ -113,7 +113,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         ),
         barTouchData: BarTouchData(
           touchTooltipData: BarTouchTooltipData(
-            tooltipBgColor: Colors.black87,
+            // tooltipBgColor: Colors.black87,
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               return BarTooltipItem(
                 '$symbol ${rod.toY.toStringAsFixed(0)}',
