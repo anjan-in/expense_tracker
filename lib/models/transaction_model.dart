@@ -22,6 +22,9 @@ class TransactionModel extends HiveObject {
   @HiveField(5)
   final String? note;
 
+  @HiveField(6)
+  final TransactionType type;
+
   TransactionModel({
     required this.id,
     required this.title,
@@ -29,6 +32,7 @@ class TransactionModel extends HiveObject {
     required this.date,
     required this.category,
     this.note,
+    required this.type,
   });
 }
 
@@ -57,4 +61,33 @@ enum ExpenseCategory {
 
   @HiveField(7)
   other,
+
+  @HiveField(8)
+  salary,
+
+  @HiveField(9)
+  freelance,
+
+  @HiveField(10)
+  investment,
+}
+
+@HiveType(typeId: 2)
+enum TransactionType {
+  @HiveField(0)
+  income,
+
+  @HiveField(1)
+  expense,
+}
+
+@HiveType(typeId: 3) // New typeId for MonthlyIncome
+class MonthlyIncome extends HiveObject {
+  @HiveField(0)
+  final String month; // Format: 'yyyy-MM'
+
+  @HiveField(1)
+  final double income;
+
+  MonthlyIncome({required this.month, required this.income});
 }

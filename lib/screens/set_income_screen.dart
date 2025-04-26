@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
-import '../models/monthly_income_model.dart';
+import '../models/transaction_model.dart';
 
 class SetIncomeScreen extends StatefulWidget {
   const SetIncomeScreen({super.key});
