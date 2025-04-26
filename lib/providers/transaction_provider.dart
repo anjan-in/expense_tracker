@@ -8,12 +8,17 @@ class TransactionProvider extends ChangeNotifier {
   List<TransactionModel> get transactions => _transactions;
 
   Future<void> loadTransactions() async {
-    _transactions = await TransactionService.getAllTransactions();
+    _transactions = TransactionService.getTransactions();
     notifyListeners();
   }
 
   Future<void> addTransaction(TransactionModel transaction) async {
     await TransactionService.addTransaction(transaction);
+    await loadTransactions();
+  }
+
+  Future<void> updateTransaction(TransactionModel transaction) async {
+    await TransactionService.updateTransaction(transaction);
     await loadTransactions();
   }
 

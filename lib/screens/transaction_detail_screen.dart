@@ -19,7 +19,9 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
   late TextEditingController _titleController;
   late TextEditingController _amountController;
   late TextEditingController _noteController;
-  ExpenseCategory _selectedCategory = ExpenseCategory.food;
+  // ExpenseCategory _selectedCategory = ExpenseCategory.food;
+  late ExpenseCategory _selectedCategory;
+  late DateTime _selectedDate;
 
   @override
   void initState() {
@@ -33,6 +35,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
     _noteController = TextEditingController(
       text: widget.transaction?.note ?? '',
     );
+    _selectedDate = widget.transaction?.date ?? DateTime.now();
     if (widget.transaction != null) {
       _selectedCategory = widget.transaction!.category;
     }
@@ -46,6 +49,18 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
     super.dispose();
   }
 
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      setState(() => _selectedDate = picked);
+    }
+  }
+
   void _saveTransaction() async {
     if (_formKey.currentState!.validate()) {
       final txn = TransactionModel(
@@ -55,7 +70,8 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
         title: _titleController.text.trim(),
         amount: double.parse(_amountController.text.trim()),
         category: _selectedCategory,
-        date: DateTime.now(),
+        // date: DateTime.now(),
+        date: _selectedDate,
         note: _noteController.text.trim(),
         type:
             widget.transaction?.type ??
@@ -68,6 +84,39 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
         await TransactionService.updateTransaction(txn);
       }
 
+      if (!mounted) return;
+      Provider.of<TransactionProvider>(
+        context,
+        listen: false,
+      ).loadTransactions();
+      Navigator.pop(context);
+    }
+  }
+
+  void _deleteTransaction() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text("Delete Transaction"),
+            content: const Text(
+              "Are you sure you want to delete this transaction?",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text("Cancel"),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text("Delete"),
+              ),
+            ],
+          ),
+    );
+
+    if (confirm == true) {
+      await TransactionService.deleteTransaction(widget.transaction!.id);
       if (!mounted) return;
       Provider.of<TransactionProvider>(
         context,
@@ -91,40 +140,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
           if (widget.transaction != null)
             IconButton(
               icon: const Icon(Icons.delete),
-              onPressed: () async {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder:
-                      (ctx) => AlertDialog(
-                        title: const Text("Delete Transaction"),
-                        content: const Text(
-                          "Are you sure you want to delete this transaction?",
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(ctx, false),
-                            child: const Text("Cancel"),
-                          ),
-                          ElevatedButton(
-                            onPressed: () => Navigator.pop(ctx, true),
-                            child: const Text("Delete"),
-                          ),
-                        ],
-                      ),
-                );
-
-                if (confirm == true) {
-                  await TransactionService.deleteTransaction(
-                    widget.transaction!.id,
-                  );
-                  if (!mounted) return;
-                  Provider.of<TransactionProvider>(
-                    context,
-                    listen: false,
-                  ).loadTransactions();
-                  Navigator.pop(context);
-                }
-              },
+              onPressed: _deleteTransaction,
             ),
         ],
       ),
@@ -132,22 +148,41 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
-          child: Column(
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          child: ListView(
             children: [
               TextFormField(
                 controller: _titleController,
-                decoration: const InputDecoration(labelText: 'Title'),
-                validator: (val) => val!.isEmpty ? 'Required' : null,
+                decoration: const InputDecoration(
+                  labelText: 'Title',
+                  border: OutlineInputBorder(),
+                ),
+                validator:
+                    (val) => val == null || val.isEmpty ? 'Required' : null,
               ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _amountController,
-                decoration: const InputDecoration(labelText: 'Amount'),
+                decoration: const InputDecoration(
+                  labelText: 'Amount',
+                  border: OutlineInputBorder(),
+                ),
                 keyboardType: TextInputType.number,
-                validator: (val) => val!.isEmpty ? 'Required' : null,
+                validator: (val) {
+                  if (val == null || val.isEmpty) return 'Required';
+                  final amount = double.tryParse(val);
+                  if (amount == null || amount <= 0)
+                    return 'Enter a valid amount';
+                  return null;
+                },
               ),
+              const SizedBox(height: 16),
               DropdownButtonFormField<ExpenseCategory>(
                 value: _selectedCategory,
-                decoration: const InputDecoration(labelText: 'Category'),
+                decoration: const InputDecoration(
+                  labelText: 'Category',
+                  border: OutlineInputBorder(),
+                ),
                 onChanged: (val) => setState(() => _selectedCategory = val!),
                 items:
                     ExpenseCategory.values.map((cat) {
@@ -157,14 +192,48 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                       );
                     }).toList(),
               ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _pickDate,
+                  icon: const Icon(Icons.calendar_today),
+                  label: Text(
+                    'Pick Date: ${_selectedDate.toLocal().toString().split(' ')[0]}',
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    alignment: Alignment.centerLeft,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    textStyle: const TextStyle(fontSize: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _noteController,
-                decoration: const InputDecoration(labelText: 'Note'),
+                decoration: const InputDecoration(
+                  labelText: 'Note',
+                  border: OutlineInputBorder(),
+                ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  textStyle: const TextStyle(fontSize: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
                 onPressed: _saveTransaction,
-                child: const Text('Save'),
+                child: Text(
+                  widget.transaction == null
+                      ? 'Add Transaction'
+                      : 'Update Transaction',
+                ),
               ),
             ],
           ),

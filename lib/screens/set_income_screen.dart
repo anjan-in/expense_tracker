@@ -11,6 +11,7 @@ class SetIncomeScreen extends StatefulWidget {
 }
 
 class _SetIncomeScreenState extends State<SetIncomeScreen> {
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController _incomeController = TextEditingController();
   final Box<MonthlyIncome> _incomeBox = Hive.box<MonthlyIncome>(
     'monthlyIncomeBox',
@@ -31,50 +32,99 @@ class _SetIncomeScreenState extends State<SetIncomeScreen> {
     }
   }
 
+  // void _saveIncome() {
+  //   final input = double.tryParse(_incomeController.text);
+  //   if (input == null || input < 0) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('Please enter a valid income amount')),
+  //     );
+  //     return;
+  //   }
+
+  //   final newIncome = MonthlyIncome(month: _currentMonthKey, income: input);
+  //   _incomeBox.put(_currentMonthKey, newIncome);
+
+  //   ScaffoldMessenger.of(
+  //     context,
+  //   ).showSnackBar(const SnackBar(content: Text('Income saved successfully')));
+  // }
   void _saveIncome() {
-    final input = double.tryParse(_incomeController.text);
-    if (input == null || input < 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid income amount')),
+    if (_formKey.currentState!.validate()) {
+      final incomeValue = double.parse(_incomeController.text.trim());
+
+      final newIncome = MonthlyIncome(
+        month: _currentMonthKey,
+        income: incomeValue,
       );
-      return;
+      _incomeBox.put(_currentMonthKey, newIncome);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Income saved successfully')),
+      );
+
+      Navigator.pop(context);
     }
+  }
 
-    final newIncome = MonthlyIncome(month: _currentMonthKey, income: input);
-    _incomeBox.put(_currentMonthKey, newIncome);
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Income saved successfully')));
+  @override
+  void dispose() {
+    _incomeController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Set Monthly Income')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Text(
-              'For $_currentMonthKey',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _incomeController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Enter Income',
-                border: OutlineInputBorder(),
+        child: Form(
+          key: _formKey,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          child: ListView(
+            children: [
+              Text(
+                'Income for $_currentMonthKey',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _saveIncome,
-              child: const Text('Save Income'),
-            ),
-          ],
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _incomeController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Enter Income',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.attach_money),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter income amount';
+                  }
+                  final income = double.tryParse(value);
+                  if (income == null || income < 0) {
+                    return 'Enter a valid positive amount';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  textStyle: const TextStyle(fontSize: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: _saveIncome,
+                child: const Text('Save Income'),
+              ),
+            ],
+          ),
         ),
       ),
     );

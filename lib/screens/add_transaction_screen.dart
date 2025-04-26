@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/transaction_model.dart';
+import '../services/transaction_service.dart';
+import '../providers/transaction_provider.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final TransactionType initialType;
@@ -13,45 +16,123 @@ class AddTransactionScreen extends StatefulWidget {
 class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _formKey = GlobalKey<FormState>();
   late TransactionType _selectedType;
-  String title = '';
-  double amount = 0.0;
-  DateTime selectedDate = DateTime.now();
-  String category = '';
+  late DateTime _selectedDate;
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _amountController = TextEditingController();
+  final TextEditingController _noteController = TextEditingController();
+  // final TextEditingController _categoryController = TextEditingController();
+  ExpenseCategory? _selectedCategory;
+
+  List<ExpenseCategory> get filteredCategories {
+    if (_selectedType == TransactionType.income) {
+      return [
+        ExpenseCategory.salary,
+        ExpenseCategory.freelance,
+        ExpenseCategory.investment,
+      ];
+    } else {
+      return [
+        ExpenseCategory.food,
+        ExpenseCategory.travel,
+        ExpenseCategory.shopping,
+        ExpenseCategory.entertainment,
+        ExpenseCategory.bills,
+        ExpenseCategory.health,
+        ExpenseCategory.education,
+        ExpenseCategory.other,
+      ];
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _selectedType = widget.initialType; // 🛠 Initialize with passed value
+    _selectedType = widget.initialType; // Initialize with passed value
+    _selectedDate = DateTime.now(); // Initialize with current date
+    _selectedCategory = ExpenseCategory.food; // Default category,
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _amountController.dispose();
+    // _categoryController.dispose();
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  void _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
   }
 
   void _saveTransaction() {
-    if (_formKey.currentState?.validate() ?? false) {
-      _formKey.currentState?.save();
+    if (_formKey.currentState!.validate()) {
+      final newTransaction = TransactionModel(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        title: _titleController.text.trim(),
+        amount: double.parse(_amountController.text.trim()),
+        category: _selectedCategory!,
+        // category: ExpenseCategory.values.firstWhere(
+        //   (cat) =>
+        //       cat.name.toLowerCase() ==
+        //       _categoryController.text.trim().toLowerCase(),
+        //   orElse: () => ExpenseCategory.other,
+        // ),
+        date: _selectedDate,
+        note: _noteController.text.trim(),
+        type: _selectedType,
+      );
 
-      // TODO: Save the transaction to Hive or Provider
+      // Save the transaction using the TransactionService
+      TransactionService.addTransaction(newTransaction)
+          .then((_) {
+            // ignore: use_build_context_synchronously
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Transaction added successfully')),
+            );
+          })
+          .catchError((error) {
+            // ignore: use_build_context_synchronously
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Failed to add transaction')),
+            );
+          });
+
+      Provider.of<TransactionProvider>(
+        context,
+        listen: false,
+      ).addTransaction(newTransaction);
+
       Navigator.pop(context);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Add Transaction')),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: ListView(
             children: [
               DropdownButtonFormField<TransactionType>(
                 value: _selectedType,
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _selectedType = value;
-                    });
-                  }
-                },
+                onChanged: (val) => setState(() => _selectedType = val!),
+                decoration: const InputDecoration(labelText: 'Type'),
                 items:
                     TransactionType.values.map((type) {
                       return DropdownMenuItem(
@@ -59,26 +140,64 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         child: Text(type.name.toUpperCase()),
                       );
                     }).toList(),
-                decoration: const InputDecoration(labelText: 'Type'),
               ),
               const SizedBox(height: 16),
               TextFormField(
+                controller: _titleController,
                 decoration: const InputDecoration(labelText: 'Title'),
-                onSaved: (value) => title = value ?? '',
-                validator: (value) => value!.isEmpty ? 'Enter a title' : null,
+                validator: (val) => val!.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
+                controller: _amountController,
                 decoration: const InputDecoration(labelText: 'Amount'),
                 keyboardType: TextInputType.number,
-                onSaved:
-                    (value) => amount = double.tryParse(value ?? '0') ?? 0.0,
-                validator: (value) => value!.isEmpty ? 'Enter an amount' : null,
+                validator: (val) => val!.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 16),
+              DropdownButtonFormField<ExpenseCategory>(
+                value: _selectedCategory,
+                decoration: const InputDecoration(labelText: 'Category'),
+                onChanged: (val) => setState(() => _selectedCategory = val!),
+                items:
+                    ExpenseCategory.values.map((cat) {
+                      return DropdownMenuItem(
+                        value: cat,
+                        child: Text(cat.name),
+                      );
+                    }).toList(),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _noteController,
+                decoration: const InputDecoration(labelText: 'Note (optional)'),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                title: const Text('Select Date'),
+                subtitle: Text(
+                  '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                  style: theme.textTheme.bodyMedium,
+                ),
+                trailing: const Icon(Icons.calendar_today),
+                onTap: _pickDate,
+              ),
+              const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _saveTransaction,
-                child: const Text('Save Transaction'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  'Add Transaction',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                ),
               ),
             ],
           ),
