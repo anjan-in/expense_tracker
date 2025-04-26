@@ -12,11 +12,14 @@ class HiveService {
   }
 
   static void _registerAdapters() {
-    if (!Hive.isAdapterRegistered(TransactionModelAdapter().typeId)) {
-      Hive.registerAdapter(TransactionModelAdapter());
+    if (!Hive.isAdapterRegistered(TransactionTypeAdapter().typeId)) {
+      Hive.registerAdapter(TransactionTypeAdapter());
     }
     if (!Hive.isAdapterRegistered(ExpenseCategoryAdapter().typeId)) {
       Hive.registerAdapter(ExpenseCategoryAdapter());
+    }
+    if (!Hive.isAdapterRegistered(TransactionModelAdapter().typeId)) {
+      Hive.registerAdapter(TransactionModelAdapter());
     }
     if (!Hive.isAdapterRegistered(MonthlyIncomeAdapter().typeId)) {
       Hive.registerAdapter(MonthlyIncomeAdapter());

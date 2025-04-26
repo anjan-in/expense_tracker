@@ -3,37 +3,12 @@ import 'package:hive/hive.dart';
 part 'transaction_model.g.dart';
 
 @HiveType(typeId: 0)
-class TransactionModel extends HiveObject {
+enum TransactionType {
   @HiveField(0)
-  final String id;
+  income,
 
   @HiveField(1)
-  final String title;
-
-  @HiveField(2)
-  final double amount;
-
-  @HiveField(3)
-  final DateTime date;
-
-  @HiveField(4)
-  final ExpenseCategory category;
-
-  @HiveField(5)
-  final String? note;
-
-  @HiveField(6)
-  final TransactionType type;
-
-  TransactionModel({
-    required this.id,
-    required this.title,
-    required this.amount,
-    required this.date,
-    required this.category,
-    this.note,
-    required this.type,
-  });
+  expense,
 }
 
 @HiveType(typeId: 1)
@@ -73,12 +48,37 @@ enum ExpenseCategory {
 }
 
 @HiveType(typeId: 2)
-enum TransactionType {
+class TransactionModel extends HiveObject {
   @HiveField(0)
-  income,
+  final String id;
 
   @HiveField(1)
-  expense,
+  final String title;
+
+  @HiveField(2)
+  final double amount;
+
+  @HiveField(3)
+  final DateTime date;
+
+  @HiveField(4)
+  final ExpenseCategory category;
+
+  @HiveField(5)
+  final String? note;
+
+  @HiveField(6)
+  final TransactionType type;
+
+  TransactionModel({
+    required this.id,
+    required this.title,
+    required this.amount,
+    required this.date,
+    required this.category,
+    this.note,
+    required this.type,
+  });
 }
 
 @HiveType(typeId: 3) // New typeId for MonthlyIncome
