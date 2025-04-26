@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import '../constants/hive_boxes.dart';
-import '../models/transaction_model.dart';
 import '../utils/currency_helper.dart';
 import '../providers/transaction_provider.dart';
-import 'package:provider/provider.dart';
+import '../models/transaction_model.dart';
 import 'add_transaction_screen.dart';
-import '../screens/transaction_detail_screen.dart';
+import '../widgets/transaction_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -34,6 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Future.microtask(
       () =>
           Provider.of<TransactionProvider>(
+            // ignore: use_build_context_synchronously
             context,
             listen: false,
           ).loadTransactions(),
@@ -209,7 +210,9 @@ class _HomeScreenState extends State<HomeScreen> {
             // 🕒 Recent Transactions
             Text(
               'Recent Transactions',
-              style: Theme.of(context).textTheme.titleLarge,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
 
@@ -225,44 +228,45 @@ class _HomeScreenState extends State<HomeScreen> {
                   physics: const NeverScrollableScrollPhysics(),
                   itemBuilder: (context, index) {
                     final txn = txns[index];
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.deepPurple.shade100,
-                        child: Icon(
-                          txn.type == TransactionType.income
-                              ? Icons.arrow_downward
-                              : Icons.arrow_upward,
-                          color:
-                              txn.type == TransactionType.income
-                                  ? Colors.green
-                                  : Colors.red,
-                        ),
-                      ),
-                      title: Text(txn.title),
-                      subtitle: Text(
-                        '${txn.category.name} • ${DateFormat('dd MMM yyyy').format(txn.date)}',
-                      ),
-                      trailing: Text(
-                        '${txn.type == TransactionType.income ? '+' : '-'} $symbol${txn.amount.toStringAsFixed(2)}',
-                        style: TextStyle(
-                          color:
-                              txn.type == TransactionType.income
-                                  ? Colors.green
-                                  : Colors.red,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (_) =>
-                                    TransactionDetailScreen(transaction: txn),
-                          ),
-                        );
-                      },
-                    );
+                    return TransactionCard(transaction: txn);
+                    // return ListTile(
+                    //   leading: CircleAvatar(
+                    //     backgroundColor: Colors.deepPurple.shade100,
+                    //     child: Icon(
+                    //       txn.type == TransactionType.income
+                    //           ? Icons.arrow_downward
+                    //           : Icons.arrow_upward,
+                    //       color:
+                    //           txn.type == TransactionType.income
+                    //               ? Colors.green
+                    //               : Colors.red,
+                    //     ),
+                    //   ),
+                    //   title: Text(txn.title),
+                    //   subtitle: Text(
+                    //     '${txn.category.name} • ${DateFormat('dd MMM yyyy').format(txn.date)}',
+                    //   ),
+                    //   trailing: Text(
+                    //     '${txn.type == TransactionType.income ? '+' : '-'} $symbol${txn.amount.toStringAsFixed(2)}',
+                    //     style: TextStyle(
+                    //       color:
+                    //           txn.type == TransactionType.income
+                    //               ? Colors.green
+                    //               : Colors.red,
+                    //       fontWeight: FontWeight.bold,
+                    //     ),
+                    //   ),
+                    //   onTap: () {
+                    //     Navigator.push(
+                    //       context,
+                    //       MaterialPageRoute(
+                    //         builder:
+                    //             (_) =>
+                    //                 TransactionDetailScreen(transaction: txn),
+                    //       ),
+                    //     );
+                    //   },
+                    // );
                   },
                 );
               },
