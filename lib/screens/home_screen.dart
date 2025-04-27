@@ -10,6 +10,7 @@ import '../providers/transaction_provider.dart';
 import '../models/transaction_model.dart';
 import 'add_transaction_screen.dart';
 import '../widgets/transaction_card.dart';
+import 'set_income_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -194,6 +195,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               initialType: TransactionType.income,
                             ),
                       ),
+                      // MaterialPageRoute(
+                      //   builder: (_) => const SetIncomeScreen(),
+                      // ),
                     );
                   },
                 ),
@@ -229,44 +233,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   itemBuilder: (context, index) {
                     final txn = txns[index];
                     return TransactionCard(transaction: txn);
-                    // return ListTile(
-                    //   leading: CircleAvatar(
-                    //     backgroundColor: Colors.deepPurple.shade100,
-                    //     child: Icon(
-                    //       txn.type == TransactionType.income
-                    //           ? Icons.arrow_downward
-                    //           : Icons.arrow_upward,
-                    //       color:
-                    //           txn.type == TransactionType.income
-                    //               ? Colors.green
-                    //               : Colors.red,
-                    //     ),
-                    //   ),
-                    //   title: Text(txn.title),
-                    //   subtitle: Text(
-                    //     '${txn.category.name} • ${DateFormat('dd MMM yyyy').format(txn.date)}',
-                    //   ),
-                    //   trailing: Text(
-                    //     '${txn.type == TransactionType.income ? '+' : '-'} $symbol${txn.amount.toStringAsFixed(2)}',
-                    //     style: TextStyle(
-                    //       color:
-                    //           txn.type == TransactionType.income
-                    //               ? Colors.green
-                    //               : Colors.red,
-                    //       fontWeight: FontWeight.bold,
-                    //     ),
-                    //   ),
-                    //   onTap: () {
-                    //     Navigator.push(
-                    //       context,
-                    //       MaterialPageRoute(
-                    //         builder:
-                    //             (_) =>
-                    //                 TransactionDetailScreen(transaction: txn),
-                    //       ),
-                    //     );
-                    //   },
-                    // );
                   },
                 );
               },

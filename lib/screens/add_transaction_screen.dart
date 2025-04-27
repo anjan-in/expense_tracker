@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/transaction_model.dart';
 import '../services/transaction_service.dart';
@@ -75,47 +77,83 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     }
   }
 
-  void _saveTransaction() {
+  void _saveTransaction() async {
     if (_formKey.currentState!.validate()) {
       final newTransaction = TransactionModel(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         title: _titleController.text.trim(),
         amount: double.parse(_amountController.text.trim()),
         category: _selectedCategory!,
-        // category: ExpenseCategory.values.firstWhere(
-        //   (cat) =>
-        //       cat.name.toLowerCase() ==
-        //       _categoryController.text.trim().toLowerCase(),
-        //   orElse: () => ExpenseCategory.other,
-        // ),
         date: _selectedDate,
         note: _noteController.text.trim(),
         type: _selectedType,
       );
 
-      // Save the transaction using the TransactionService
-      TransactionService.addTransaction(newTransaction)
-          .then((_) {
-            // ignore: use_build_context_synchronously
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Transaction added successfully')),
-            );
-          })
-          .catchError((error) {
-            // ignore: use_build_context_synchronously
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Failed to add transaction')),
-            );
-          });
+      await TransactionService.addTransaction(newTransaction);
+
+      // Update the Monthly Income Box if it's an income transaction
+      if (newTransaction.type == TransactionType.income) {
+        final incomeBox = Hive.box<MonthlyIncome>('monthlyIncomeBox');
+        final monthKey = DateFormat('yyyy-MM').format(newTransaction.date);
+
+        final existingIncome = incomeBox.get(monthKey)?.income ?? 0.0;
+        final updatedIncome = existingIncome + newTransaction.amount;
+
+        await incomeBox.put(
+          monthKey,
+          MonthlyIncome(month: monthKey, income: updatedIncome),
+        );
+      }
 
       Provider.of<TransactionProvider>(
         context,
         listen: false,
       ).addTransaction(newTransaction);
 
-      Navigator.pop(context);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Transaction added successfully')),
+        );
+        Navigator.pop(context);
+      }
     }
   }
+
+  // void _saveTransaction() {
+  //   if (_formKey.currentState!.validate()) {
+  //     final newTransaction = TransactionModel(
+  //       id: DateTime.now().millisecondsSinceEpoch.toString(),
+  //       title: _titleController.text.trim(),
+  //       amount: double.parse(_amountController.text.trim()),
+  //       category: _selectedCategory!,
+  //       date: _selectedDate,
+  //       note: _noteController.text.trim(),
+  //       type: _selectedType,
+  //     );
+
+  //     // Save the transaction using the TransactionService
+  //     TransactionService.addTransaction(newTransaction)
+  //         .then((_) {
+  //           // ignore: use_build_context_synchronously
+  //           ScaffoldMessenger.of(context).showSnackBar(
+  //             const SnackBar(content: Text('Transaction added successfully')),
+  //           );
+  //         })
+  //         .catchError((error) {
+  //           // ignore: use_build_context_synchronously
+  //           ScaffoldMessenger.of(context).showSnackBar(
+  //             const SnackBar(content: Text('Failed to add transaction')),
+  //           );
+  //         });
+
+  //     Provider.of<TransactionProvider>(
+  //       context,
+  //       listen: false,
+  //     ).addTransaction(newTransaction);
+
+  //     Navigator.pop(context);
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
